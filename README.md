@@ -1,6 +1,6 @@
 ### 환경설정
-BE : django, sqlite3
-FE : javascript, jQuery, html/css
+- BE : django, sqlite3
+- FE : javascript, jQuery, html/css
 
 ### DB 스키마
 ![image](https://github.com/jjuyeoni/python_project/assets/18046663/5a6814e8-bee2-43cb-9266-b1787e51c47a)
