@@ -1,4 +1,10 @@
-- 로컬 실행 가이드
+### 환경설정
+BE : django, sqlite3
+
+### DB 스키마
+![image](https://github.com/jjuyeoni/python_project/assets/18046663/5a6814e8-bee2-43cb-9266-b1787e51c47a)
+
+### 로컬 실행 가이드
   - requirements.txt 에 설정된 파일 다운 후 실행이 필요합니다. <br>
     pip3 install -r requirements.txt
 
@@ -14,7 +20,7 @@
       3. 거절 : refuse1@example.com
       4. 탈퇴 : delete1@example.com
 
-- 기능 
+### 기능 
   - 첫 화면은 로그인으로 세팅, 로그인 or 회원 가입 시 바로 백오피스 화면으로 진입.
     ( 이때 탈퇴 계정은 로그인 단계에서 Block )
 
@@ -27,13 +33,7 @@
   - 회원 검색 기능
   - 회원 정보 변경 히스토리 리스트업
 
-
-- DB 스키마
- ![image](https://github.com/doodlincorp-assignment/230529_chajuyeon_office/assets/18046663/9922906b-d087-48b2-87cf-c776ad027483)
-
-
-
-- 프로젝트 설계 구조
+### 프로젝트 설계 구조
 
 ```
 └─mysite
