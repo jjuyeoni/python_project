@@ -1,0 +1,71 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>백오피스</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    {% load bootstrap4 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    
+</head>
+<body>
+
+    <div class="d-flex align-items-center justify-content-center" style="height: 100vh; position: relative; flex-direction: column;">
+        
+        {% block content %}
+        {% endblock %}  
+ 
+    </div>
+</body>
+</html>
+
+<script>
+    $(document).ready(function() {
+        $('#duplicate-check').click(function() {
+            var email = $('#id_email').val();
+            
+            // 이메일 칸이 비어있는 경우
+            if (email === '') {
+                $('#email-error').text('이메일을 입력해주세요.'); 
+                $('#id_email').addClass('is-invalid');
+                return;
+            }
+
+            // 이메일 형식 잘못된 경우
+            if (!isValidEmail(email)) {
+                $('#email-error').text('이메일 형식이 잘못되었습니다.'); 
+                $('#id_email').addClass('is-invalid');
+                return;
+            }
+
+            // 중복 검사
+            $.ajax({
+                headers: { "X-CSRFToken": '{{csrf_token}}' },
+                url: '/auth/check_email/', 
+                method: 'POST',
+                data: { 'email': email },
+                success: function(response) {
+                    if (response.exists) {
+                        $('#email-error').text('이미 사용 중인 이메일입니다.');
+                        $('#id_email').addClass('is-invalid');
+                    } else {
+                        $('#email-error').text('');
+                        $('#email-ok').text('사용 가능한 이메일입니다.');
+                        $('#id_email').removeClass('is-invalid');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log(error);
+                }
+            });
+        });
+        function isValidEmail(email) {
+            var emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
+            return emailRegex.test(email);
+        }
+    });
+   </script>

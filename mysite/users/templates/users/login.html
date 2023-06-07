@@ -1,0 +1,22 @@
+{% extends "users/base.html" %}
+{% block content %}
+    <h4 style="margin-bottom: 10px;">로그인</h4><br>
+    <form method="post" style="width: 20%">
+        {% csrf_token %}
+        <div class="form-group" > 
+            <input type="text" class="form-control" id="id_email" name="email" placeholder="ID" required>
+        </div>
+        <div class="form-group">
+            <input type="password" class="form-control" id="id_password" name="password" placeholder="PASSWORD" required>
+        </div>
+        {% if msg %}
+        <p>{{ msg }}</p>
+        {% endif %}
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary">로그인</button>
+            <a href="/auth/signup" class="btn btn-primary">회원가입</a>
+        </div>
+    </form>
+
+{% endblock %}
+

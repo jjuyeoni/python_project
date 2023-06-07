@@ -1,0 +1,154 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>백오피스</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    {% load bootstrap4 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <!-- Our project just needs Font Awesome Free's Solid and Brand files -->
+    <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}">
+</head>
+<div class="page-wrapper chiller-theme toggled">
+    <a id="show-sidebar" class="btn btn-sm btn-dark" href="#">
+      <i class="fas fa-bars"></i>
+    </a>
+    <nav id="sidebar" class="sidebar-wrapper">
+      <div class="sidebar-content">
+        <div class="sidebar-brand">
+          <a href="#">백오피스</a>
+        </div>
+        <div class="sidebar-header">
+          <div class="user-info">
+            <span class="user-name">
+              <strong>{{user.username}} 님</strong>
+            </span>
+            {% if user.is_superuser %}
+                <span class="user-role">Master</span>
+            {% elif user.is_staff and not user.is_superuser %}
+                <span class="user-role">Administrator</span>
+            {% else %}
+                <span class="user-role">User</span>
+            {% endif %}
+            <span class="user-status">
+                <i class="fa fa-circle"></i>
+                <span>Online</span>
+            </span>
+          </div>   
+        </div>
+        <!-- sidebar-header  -->
+        <div class="sidebar-menu">
+          <ul>
+            {% if user.status == 'A' %}
+                {% if user.is_staff == True %}
+                    <li class="sidebar-dropdown">
+                        <a href="/">
+                            <i class="fa fa-globe"></i>
+                            <span>가입대기</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-dropdown">
+                      <a href="/history">
+                          <i class="fa fa-folder"></i>
+                          <span>히스토리</span>
+                      </a>
+                    </li>
+                {% endif %}
+                    <li class="sidebar-dropdown">
+                        <a href="/userList">
+                            <i class="fa fa-book"></i>
+                            <span>회원</span>
+                        </a>
+                    </li>
+                    
+            {% endif %} 
+          </ul>
+        </div>
+        <!-- sidebar-menu  -->
+      </div>
+      <!-- sidebar-content  -->
+      <div class="sidebar-footer">
+        <a href="/logout/">
+          <span>Log out</span>
+        </a>
+      </div>
+    </nav>
+    <!-- sidebar-wrapper  -->
+    <main class="page-content">
+        <div class="container-fluid">
+            {% block content %}
+            {% endblock %}      
+        </div>
+    </main>
+</div>
+</body>
+</html>
+
+<script>
+    function approveUser(userId) {
+      $.ajax({
+        url: "/update_user_status/",
+        method: "POST",
+        data: {
+          user_id: userId,
+          status: "A",
+          csrfmiddlewaretoken: "{{ csrf_token }}",
+        },
+        success: function () {
+          location.reload(); 
+        },
+      });
+    }
+
+    function rejectUser(userId) {
+        var rejectionReason = document.getElementById("rejectionReason" + userId).value;
+        var currentDate = new Date().toISOString();
+        
+        if (!rejectionReason) {
+            alert("거절 이유를 입력해주세요.");
+            return;
+        }
+
+        $.ajax({
+            url: "/update_user_status/",
+            method: "POST",
+            data: {
+                user_id: userId,
+                status: "R",
+                rejection_reason: rejectionReason,
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+            },
+            success: function () {
+                location.reload(); 
+            },
+        });
+    }
+
+    function quitUser(userId) {
+        var quitReason = document.getElementById("quitReason" + userId).value;
+
+        if (!quitReason) {
+            alert("탈퇴 사유를 입력해주세요.");
+            return;
+        }
+
+        $.ajax({
+            url: "/quit_user/",
+            method: "POST",
+            data: {
+                user_id: userId,
+                quit_reason: quitReason,
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+            },
+            success: function () {
+                location.reload();
+            },
+        });
+    }   
+    
+</script>

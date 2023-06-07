@@ -1,0 +1,176 @@
+<!-- 백오피스 승인된 유저 화면 입니다. -->
+{% extends "office/base.html" %}
+{% block content %}
+    
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-end">
+            <strong>회원</strong>
+            <!-- 회원 검색 기능 -->
+            <form action="/normalUserSearch" method="GET" class="ml-auto">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="query" placeholder="회원 검색">
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-primary">검색</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div style="padding-top: 10px;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">idNo</th>
+                        <th scope="col">이메일</th>
+                        <th scope="col">이름</th>
+                        <th scope="col">등급</th>
+                        <th scope="col">가입일시</th>
+                        <th scope="col">최근 로그인일시</th>
+                        <th scope="col">　</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% if users %}
+                    {% for user in users %}
+                    <tr>
+                        <th scope="row">{{ user.id }}</th>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>
+                            {% if user.is_superuser %}
+                                마스터
+                            {% elif user.is_staff and not user.is_superuser %}
+                                관리자
+                            {% else %}
+                                일반
+                            {% endif %}
+                        </td>
+                        <td>{{ user.date_joined|date:"Y-m-d H:i"}}</td>
+                        <td>{{ user.last_login|date:"Y-m-d H:i"}}</td>
+                        <td>
+                            {% if signedUser.is_staff %}
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal{{ user.id }}">상세</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- modal 화면단 입니다. -->
+    {% if users %}
+        {% for user in users %}
+            <div class="modal fade" id="exampleModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form method="POST" action="{% url 'update_user_info' user.id %}">
+                            {% csrf_token %}
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">{{ user.email }} 정보</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <table class="table">     
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row">이름</th>
+                                            <td><input type="text" class="form-control" id="nameInput" name="username" value="{{ user.username }}"></td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">전화번호</th>
+                                            <td><input type="text" class="form-control" id="phoneInput" name="phone_number" value="{{ user.phone_number }}"></td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">등급</th>
+                                            <!-- for changing Role -->
+                                            <td><select class="custom-select" id="inputGroupSelect02" name="role">
+                                                {% if user.is_superuser %}
+                                                    <option selected value="superuser">마스터</option>
+                                                    <option value="staff">관리자</option>
+                                                    <option value="normal">일반</option>
+                                                {% elif user.is_staff and not user.is_superuser %}
+                                                    <option selected value="staff">관리자</option>
+                                                    <option value="normal">일반</option>
+                                                {% else %}
+                                                    <option selected value="normal">일반</option>
+                                                    <option value="staff">관리자</option>
+                                                {% endif %}                                                
+                                            </select></td>
+                                            <!---------------------->
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">탈퇴일시</th>
+                                            <td>
+                                                {% if user.is_active %}
+                                                    가입유저
+                                                {% else %}
+                                                    {{ user.quit_date|date:"Y-m-d H:i"}}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">탈퇴 이유</th>
+                                            <td>
+                                                {% if user.is_active %}
+                                                    <input type="text" class="form-control" id="quitReason{{ user.id }}" placeholder="탈퇴 사유를 입력하세요.">
+                                                {% else %}
+                                                    {{user.quit_reason}}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">저장</button>
+                                {% if user.is_active %}
+                                    <button type="button" class="btn btn-danger" data-dismiss="modal" onclick="quitUser({{ user.id }})">탈퇴</button>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+     <!-- 페이지네이션 -->
+        {% if users.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if previous_page_number %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for i in users.paginator.page_range %}
+                        {% if users.number == i %}
+                            <li class="page-item active">
+                                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if next_page_number %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% endif %}
+{% endblock %}

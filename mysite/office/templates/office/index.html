@@ -1,0 +1,176 @@
+<!-- 백오피스 가입 승인 대기 유저 화면 입니다. -->
+{% extends "office/base.html" %}
+{% block content %}
+    
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-end">
+            <strong>가입대기</strong>
+
+            <!-- 회원 검색 기능 -->            
+            <form action="/waitingUserSearch" method="GET" class="ml-auto">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <select class="custom-select" name="statusSearch">
+                            <option value="every">전체</option>
+                            <option value="W">대기</option>
+                            <option value="R">거절</option>
+                        </select>
+                    </div>
+                    <input type="text" class="form-control" name="query" placeholder="회원 검색">
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-primary">검색</button>
+                    </div>
+                </div>
+            </form>                    
+        </div>
+        <div style="padding-top: 10px;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">idNo</th>
+                        <th scope="col">이메일</th>
+                        <th scope="col">상태</th>
+                        <th scope="col">이름</th>
+                        <th scope="col">가입일시</th>
+                        <th scope="col">거절일시</th>
+                        <th scope="col">　</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if waiting_users %}
+                        {% for user in waiting_users %}
+                            <tr>
+                                <th scope="row">{{ user.id }}</th>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% if user.status == 'W' %}
+                                        대기
+                                    {% elif user.status == 'R' %}
+                                        거절
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.date_joined|date:"Y-m-d H:i"}}</td>
+                                <td>
+                                    {% if user.rejection_date %}
+                                        {{ user.rejection_date|date:"Y-m-d H:i"}}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if signedUser.is_staff %}
+                                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal{{ user.id }}">상세</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- modal 화면단 입니다. -->
+    {% if waiting_users %}
+        {% for user in waiting_users %}
+            <div class="modal fade" id="exampleModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">{{ user.email }} 정보</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">이름</th>
+                                        <td>{{ user.username }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">전화번호</th>
+                                        <td>{{ user.phone_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">상태</th>
+                                        <td>
+                                            {% if user.status == 'W' %}
+                                                대기
+                                            {% elif user.status == 'R' %}
+                                                거절
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">가입일시</th>
+                                        <td>{{ user.date_joined|date:"Y-m-d H:i"}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">최근 로그인일시</th>
+                                        <td>{{ user.last_login|date:"Y-m-d H:i"}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">거절 이유</th>
+                                        <td>
+                                            {% if user.status == 'W' %}
+                                                <input type="text" class="form-control" id="rejectionReason{{ user.id }}" placeholder="거절 이유를 입력하세요.">
+                                            {% elif user.status == 'R' %}
+                                                {{user.rejection_reason}}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            {% if user.status == 'W' %}
+                                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="approveUser({{ user.id }})">승인</button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal" onclick="rejectUser({{ user.id }})">거절</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        <!-- 페이지네이션 -->
+        {% if waiting_users.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if previous_page_number %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for i in waiting_users.paginator.page_range %}
+                        {% if waiting_users.number == i %}
+                            <li class="page-item active">
+                                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if next_page_number %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+
+
